@@ -1,6 +1,12 @@
 name: Build Scanfolio for Windows
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish a GitHub release
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -9,6 +15,9 @@ jobs:
   build:
     if: github.ref == 'refs/heads/main'
     runs-on: windows-2025
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact_id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,7 +36,21 @@ jobs:
         run: uv run --offline --locked python -m unittest -v
 
       - name: Build Scanfolio.exe
-        run: uv run --offline --locked pyinstaller --onefile --console --name Scanfolio museum_cli.py
+        run: uv run --offline --locked pyinstaller --onefile --console --name Scanfolio --copy-metadata scanfolio museum_cli.py
+
+      - name: Check executable version
+        id: version
+        run: |
+          $readVersion = "from importlib.metadata import version; print(version('scanfolio'))"
+          $expected = uv run --offline --locked python -c $readVersion
+          if ($LASTEXITCODE -ne 0 -or -not $expected) {
+            throw 'Could not read the installed Scanfolio version.'
+          }
+          $actual = .\dist\Scanfolio.exe --version
+          if ($LASTEXITCODE -ne 0 -or ($actual -join "`n") -cne $expected) {
+            throw "Expected Scanfolio.exe --version to print '$expected'. Got '$actual'."
+          }
+          "version=$expected" >> $env:GITHUB_OUTPUT
 
       - name: Check executable help
         run: |
@@ -39,7 +62,40 @@ jobs:
           }
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: artifact
         with:
-          name: Scanfolio-windows-x64
+          name: Scanfolio-windows-x64-v${{ steps.version.outputs.version }}
           path: dist/Scanfolio.exe
           if-no-files-found: error
+          overwrite: true
+
+  release:
+    if: inputs.publish_release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: windows-release-v${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          path: dist
+
+      - name: Publish Windows release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.build.outputs.version }}
+        run: |
+          test -s dist/Scanfolio.exe
+          if tag_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq .object.sha 2>/dev/null); then
+            if [ "$tag_sha" != "$GITHUB_SHA" ]; then
+              echo "$TAG already points to a different Git object."
+              exit 1
+            fi
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" --silent
+          fi
+          gh release create "$TAG" dist/Scanfolio.exe --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes

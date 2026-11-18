@@ -5,6 +5,7 @@ import sys
 import unittest
 import warnings
 from contextlib import redirect_stderr, redirect_stdout
+from importlib.metadata import version
 from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -155,6 +156,21 @@ class MuseumCliTest(unittest.TestCase):
                     prompt.assert_not_called()
                     save.assert_not_called()
                     factory.assert_not_called()
+
+    def test_version_exits_before_scan_or_key_work(self) -> None:
+        with (patch.object(sys, "argv", ["scanfolio", "--version", "--update-key", "missing-scan-folder"]),
+              patch.object(museum_cli, "_guided_run") as guided,
+              patch.object(museum_cli, "_update_key") as update_key,
+              patch.object(museum_cli, "_scan_sources") as scan_folders,
+              redirect_stdout(StringIO()) as output,
+              self.assertRaises(SystemExit) as exit_status):
+            museum_cli.cli()
+
+        self.assertEqual(exit_status.exception.code, 0)
+        self.assertEqual(output.getvalue(), f"{version('scanfolio')}\n")
+        guided.assert_not_called()
+        update_key.assert_not_called()
+        scan_folders.assert_not_called()
 
     def test_update_key_is_discoverable_and_replaces_a_key_without_reading_it(self) -> None:
         runner = CliRunner()

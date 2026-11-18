@@ -17,6 +17,7 @@ photos/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+*.egg-info/
 /build/
 /dist/
 *.spec

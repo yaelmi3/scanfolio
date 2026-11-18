@@ -5,6 +5,7 @@ Use uv to set up Python 3.12 and start the guided launch or pass a flat scan fol
 
 ```sh
 uv sync --python 3.12
+uv run scanfolio --version
 uv run python museum_cli.py
 uv run python museum_cli.py /path/to/scans /path/to/output
 ```
@@ -19,6 +20,9 @@ Run `uv run python museum_cli.py --update-key` in a terminal to replace the save
 running extraction. Blank input or cancellation leaves the saved key unchanged.
 `OPENAI_API_KEY` takes priority over the saved key. For unattended runs, set that variable or save a key in
 advance.
+
+After installing the project, `scanfolio` also starts the guided launch. It accepts the same arguments as
+`python museum_cli.py`, including `--version`.
 
 Each new extraction sends a full-resolution JPEG copy to `gpt-5.4` with original image detail, low reasoning,
 and `store=False`. Each request has a five-minute timeout.
@@ -40,7 +44,7 @@ Review flags alone do not change the exit code.
 Use the [checked-in Scanfolio.exe](Scanfolio.exe) or [download it directly from GitHub Releases][windows-download].
 Double-click the executable in Explorer to start the guided launch.
 
-[windows-download]: https://github.com/yaelmi3/scanfolio-public/releases/download/v0.1.1/Scanfolio.exe
+[windows-download]: https://github.com/yaelmi3/scanfolio/releases/latest/download/Scanfolio.exe
 
 ### Build from source
 
@@ -48,10 +52,15 @@ With uv installed, run these commands in PowerShell on Windows. The build uses P
 
 ```powershell
 uv sync --python 3.12
-uv run pyinstaller --onefile --console --name Scanfolio museum_cli.py
+uv run --offline --locked pyinstaller --onefile --console --name Scanfolio --copy-metadata scanfolio museum_cli.py
+.\dist\Scanfolio.exe --version
 .\dist\Scanfolio.exe --help
 .\dist\Scanfolio.exe 'C:\path\to\scans' 'C:\path\to\output'
 .\dist\Scanfolio.exe --update-key
 ```
 
 Double-click `dist/Scanfolio.exe` in Explorer to use the guided launch on Windows.
+
+Run **Build Scanfolio for Windows** on `main` to build and test the executable and upload it as an Actions
+artifact. Select **Publish a GitHub release** to also attach it to a release tagged `v<version>` at the
+commit that was built. After changing the version in `pyproject.toml`, run `uv lock` to refresh the lockfile.

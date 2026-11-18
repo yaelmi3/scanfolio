@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from getpass import GetPassWarning, getpass
+from importlib.metadata import version
 from io import BytesIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -494,10 +495,18 @@ def _prepare_output(output: Path) -> Path:
     return output
 
 
+def _show_version(requested: bool) -> None:
+    if requested:
+        typer.echo(version("scanfolio"))
+        raise typer.Exit()
+
+
 @app.command()
 def main(scans: Annotated[Path | None, typer.Argument(help="Flat scan folder", exists=True, file_okay=False)] = None,
          output: Annotated[Path | None, typer.Argument(help="Output folder", file_okay=False)] = None,
          update_key: Annotated[bool, typer.Option("--update-key", help="Replace the saved OpenAI API key.")] = False,
+         show_version: Annotated[bool, typer.Option(
+             "--version", callback=_show_version, is_eager=True, help="Show the version and exit.")] = False,
          ) -> None:
     """Transcribe museum cards into a CSV and crop their mounted photos."""
     try:
@@ -590,8 +599,12 @@ def _guided_run() -> int:
         root.destroy()
 
 
-if __name__ == "__main__":
+def cli() -> None:
     logging.getLogger("openai").setLevel(logging.WARNING)
     if len(sys.argv) == 1:
         raise SystemExit(_guided_run())
     app()
+
+
+if __name__ == "__main__":
+    cli()
