@@ -1,0 +1,14 @@
+[project]
+name = "scanfolio"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=2.29,<3",
+    "Pillow>=11.3,<13",
+    "pydantic>=2.8,<3",
+    "rich>=13.9,<16",
+    "typer>=0.16,<1",
+]
+
+[dependency-groups]
+dev = ["pyinstaller>=6.12,<7"]

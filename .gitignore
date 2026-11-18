@@ -1,0 +1,23 @@
+# Local scans and exports
+/MHP*
+/fwd.zip
+/scans/
+/export/
+/pilot-export/
+.museum-state/
+catalog.csv
+photos/
+
+# Local credentials
+.env
+.env.*
+
+# Python and PyInstaller
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+/build/
+/dist/
+*.spec
+.DS_Store
