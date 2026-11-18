@@ -260,7 +260,7 @@ def _extract(*, image: Image.Image, source_sha256: str, access: ExtractionAccess
         image.convert("RGB").save(buffer, format="JPEG", quality=95, subsampling=0, optimize=True)
         image_url = "data:image/jpeg;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
         response = client.responses.create(
-            model=MODEL, store=False, reasoning={"effort": "medium"}, instructions=EXTRACTION_INSTRUCTIONS,
+            model=MODEL, store=False, reasoning={"effort": "low"}, instructions=EXTRACTION_INSTRUCTIONS,
             input=[{"role": "user", "content": [
                 {"type": "input_text", "text": f"Transcribe this {image.width} × {image.height} scan."},
                 {"type": "input_image", "image_url": image_url, "detail": "original"},

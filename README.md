@@ -20,7 +20,7 @@ running extraction. Blank input or cancellation leaves the saved key unchanged.
 `OPENAI_API_KEY` takes priority over the saved key. For unattended runs, set that variable or save a key in
 advance.
 
-Each new extraction sends a full-resolution JPEG copy to `gpt-5.4` with original image detail, medium reasoning,
+Each new extraction sends a full-resolution JPEG copy to `gpt-5.4` with original image detail, low reasoning,
 and `store=False`. Each request has a five-minute timeout.
 
 - `catalog.csv` opens in Excel with Hebrew and English preserved. Each row includes the exact filename stem,
