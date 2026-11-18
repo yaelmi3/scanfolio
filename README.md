@@ -35,9 +35,14 @@ Changed scans get new checkpoints and crop paths. The CSV references only crops 
 The CLI writes successful rows even when a scan fails, records failures in their rows, and exits with code `1`.
 Review flags alone do not change the exit code.
 
-## Build a Windows executable
+## Windows x64
 
-Download `Scanfolio.exe` for Windows x64 from [GitHub Releases](../../releases/latest).
+Use the [checked-in Scanfolio.exe](Scanfolio.exe) or [download it directly from GitHub Releases][windows-download].
+Double-click the executable in Explorer to start the guided launch.
+
+[windows-download]: https://github.com/yaelmi3/scanfolio-public/releases/download/v0.1.1/Scanfolio.exe
+
+### Build from source
 
 With uv installed, run these commands in PowerShell on Windows. The build uses PyInstaller from the dev group.
 
